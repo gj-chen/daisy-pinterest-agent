@@ -1,0 +1,17 @@
+{
+  "name": "daisy-pinterest-agent",
+  "version": "1.0.0",
+  "description": "Daisy's Pinterest scraping agent",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^21.3.8",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
