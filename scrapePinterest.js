@@ -1,7 +1,8 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 
 async function scrapePinterest(query) {
   const browser = await puppeteer.launch({
+    executablePath: '/usr/bin/google-chrome', // use Render or Railway's built-in Chrome
     headless: "new",
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
