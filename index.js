@@ -15,12 +15,14 @@ app.post('/search-pinterest', async (req, res) => {
 
   try {
     const results = await scrapePinterest(query);
+    console.log(`✅ Scraped ${results.length} images for query: ${query}`);
     res.json({ results });
   } catch (err) {
-    console.error('❌ Error in /search-pinterest:', err);
+    console.error('❌ Scrape failed:', err);
     res.status(500).json({ error: 'Failed to scrape' });
   }
 });
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
