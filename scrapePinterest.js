@@ -1,46 +1,42 @@
-const puppeteer = require('puppeteer');
+import puppeteer from 'puppeteer';
 
-async function scrapePinterest(query) {
-  console.log(`🔍 Starting Pinterest scrape for query: "${query}"`);
+export async function scrapePinterest(keyword) {
+  console.log(`[scrapePinterest] Launching Puppeteer for keyword: ${keyword}`);
 
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
-  const page = await browser.newPage();
-  const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
+  let browser;
+  try {
+    browser = await puppeteer.launch({ headless: true });
+    console.log(`[scrapePinterest] Chromium path: ${puppeteer.executablePath()}`);
+  } catch (launchError) {
+    console.error(`[scrapePinterest] Failed to launch browser:`, launchError);
+    throw new Error('Failed to launch Puppeteer');
+  }
 
   try {
-    console.log(`🌐 Navigating to: ${searchUrl}`);
-    await page.goto(searchUrl, { waitUntil: 'networkidle2' });
+    const page = await browser.newPage();
+    console.log(`[scrapePinterest] Opened new page`);
 
-    console.log('⏳ Waiting for pin selector to appear...');
-    await page.waitForSelector('div[data-test-id="pin"]', { timeout: 10000 });
+    const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(keyword)}`;
+    console.log(`[scrapePinterest] Navigating to: ${searchUrl}`);
 
-    console.log('✅ Pin selector found. Extracting results...');
-    const results = await page.evaluate(() => {
-      const pins = document.querySelectorAll('div[data-test-id="pin"]');
-      return Array.from(pins).slice(0, 5).map(pin => {
-        const img = pin.querySelector('img');
-        const anchor = pin.closest('a');
-        return {
-          url: img?.src || null,
-          alt: img?.alt || null,
-          link: anchor?.href || null
-        };
-      }).filter(p => p.url && p.link);
-    });
+    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    console.log(`✅ Scraped ${results.length} image(s)`);
-    await browser.close();
-    return results;
-  } catch (err) {
-    console.error('❌ Scrape failed:', err.message);
-    console.error(err.stack);
-    await browser.close();
-    return [];
+    // Example selector – you may need to adjust this
+    const imageUrls = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('img'))
+        .map((img) => img.src)
+        .filter((src) => src && src.startsWith('https'))
+    );
+
+    console.log(`[scrapePinterest] Found ${imageUrls.length} images`);
+    return imageUrls.slice(0, 20); // return top 20 results
+  } catch (scrapeError) {
+    console.error(`[scrapePinterest] Error scraping Pinterest:`, scrapeError);
+    throw new Error('Failed to scrape Pinterest');
+  } finally {
+    if (browser) {
+      await browser.close();
+      console.log(`[scrapePinterest] Browser closed`);
+    }
   }
 }
-
-module.exports = scrapePinterest;

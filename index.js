@@ -1,30 +1,28 @@
-const express = require('express');
-const cors = require('cors');
-const scrapePinterest = require('./scrapePinterest');
+import express from 'express';
+import cors from 'cors';
+import { scrapePinterest } from './scrapePinterest.js';
 
 const app = express();
 app.use(cors());
-app.use(express.json());
 
-app.post('/search-pinterest', async (req, res) => {
-  const { query } = req.body;
+app.get('/search-pinterest', async (req, res) => {
+  const query = req.query.q;
+  console.log(`[server] Received search request for: ${query}`);
 
   if (!query) {
-    return res.status(400).json({ error: 'Missing query' });
+    return res.status(400).json({ error: 'Missing query parameter ?q=' });
   }
 
   try {
     const results = await scrapePinterest(query);
-    console.log(`✅ Scraped ${results.length} images for query: ${query}`);
-    res.json({ results });
-  } catch (err) {
-    console.error('❌ Scrape failed:', err);
-    res.status(500).json({ error: 'Failed to scrape' });
+    res.json({ images: results });
+  } catch (error) {
+    console.error(`[server] Error during Pinterest scrape:`, error);
+    res.status(500).json({ error: 'Failed to fetch Pinterest images' });
   }
 });
 
-
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Daisy Pinterest Agent running on port ${PORT}`);
+  console.log(`[server] Pinterest agent listening on port ${PORT}`);
 });
