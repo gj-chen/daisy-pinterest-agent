@@ -5,7 +5,11 @@ export async function scrapePinterest(keyword) {
 
   let browser;
   try {
-    browser = await puppeteer.launch({ headless: true });
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
     console.log(`[scrapePinterest] Chromium path: ${puppeteer.executablePath()}`);
   } catch (launchError) {
     console.error(`[scrapePinterest] Failed to launch browser:`, launchError);
