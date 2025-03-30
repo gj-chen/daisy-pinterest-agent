@@ -1,8 +1,9 @@
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 
 async function scrapePinterest(query) {
+  console.log(`🔍 Starting Pinterest scrape for query: "${query}"`);
+
   const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/google-chrome', // use Render or Railway's built-in Chrome
     headless: "new",
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
@@ -11,11 +12,13 @@ async function scrapePinterest(query) {
   const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
 
   try {
-    console.log(`🔍 Searching Pinterest for: "${query}"`);
+    console.log(`🌐 Navigating to: ${searchUrl}`);
     await page.goto(searchUrl, { waitUntil: 'networkidle2' });
 
+    console.log('⏳ Waiting for pin selector to appear...');
     await page.waitForSelector('div[data-test-id="pin"]', { timeout: 10000 });
 
+    console.log('✅ Pin selector found. Extracting results...');
     const results = await page.evaluate(() => {
       const pins = document.querySelectorAll('div[data-test-id="pin"]');
       return Array.from(pins).slice(0, 5).map(pin => {
@@ -29,10 +32,12 @@ async function scrapePinterest(query) {
       }).filter(p => p.url && p.link);
     });
 
+    console.log(`✅ Scraped ${results.length} image(s)`);
     await browser.close();
     return results;
   } catch (err) {
-    console.error('❌ Scraping failed:', err);
+    console.error('❌ Scrape failed:', err.message);
+    console.error(err.stack);
     await browser.close();
     return [];
   }
