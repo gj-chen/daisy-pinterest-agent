@@ -26,10 +26,11 @@ export async function scrapePinterest(keyword) {
     await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
 
     // Example selector – you may need to adjust this
+    // Pinterest scraper logic
     const imageUrls = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('img'))
-        .map((img) => img.src)
-        .filter((src) => src && src.startsWith('https'))
+      Array.from(document.querySelectorAll('img[src*="236x"]'))
+           .map(img => img.src)
+           .filter(src => src.startsWith('https://i.pinimg.com/236x/'))
     );
 
     console.log(`[scrapePinterest] Found ${imageUrls.length} images`);
